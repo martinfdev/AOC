@@ -27,4 +27,37 @@ func day2(get_data string) {
 		}
 	}
 	fmt.Println(score)
+	part2day2(&list_data, dictionaryValues)
+}
+
+func part2day2(list_data *[]string, dictionary map[string]int) {
+
+	score := 0
+	for _, data := range *list_data {
+		tmp_data := strings.Split(data, " ")
+		//plan is lost
+		if tmp_data[1] == "X" {
+			if tmp_data[0] == "A" {
+				score += dictionary["Z"]
+			} else if tmp_data[0] == "B" {
+				score += dictionary["X"]
+			} else if tmp_data[0] == "C" {
+				score += dictionary["Y"]
+			}
+			//plan is draw
+		} else if tmp_data[1] == "Y" {
+			score += dictionary[tmp_data[0]] + 3
+			//plan is win
+		} else if tmp_data[1] == "Z" {
+			if tmp_data[0] == "A" {
+				score += dictionary["Y"]
+			} else if tmp_data[0] == "B" {
+				score += dictionary["Z"]
+			} else if tmp_data[0] == "C" {
+				score += dictionary["X"]
+			}
+			score += 6
+		}
+	}
+	fmt.Println(score)
 }
