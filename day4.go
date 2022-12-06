@@ -11,7 +11,7 @@ func day4(input_data string) {
 	pairs := strings.Split(tmp_input, "\n")
 
 	count := 0
-	countOverlaps := 0
+	countOverlap := 0
 
 	for _, pair := range pairs {
 		asigments := strings.Split(pair, ",")
@@ -28,12 +28,11 @@ func day4(input_data string) {
 			second_start <= first_start && second_end >= first_end {
 			count++
 
-			//part2 the solver
-			countOverlaps++
-		} else if first_end >= second_start {
-			countOverlaps++
+			//part2 the solver overlap
+		} else if first_start <= second_end && first_end >= second_start {
+			countOverlap++
 		}
 	}
 	fmt.Println(count)
-	fmt.Println(countOverlaps)
+	fmt.Println(countOverlap + count)
 }
