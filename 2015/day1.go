@@ -11,6 +11,10 @@ func Day1() {
 			count++
 		} else if data[i] == ')' {
 			count--
+			if count == -1 {
+				fmt.Println(i + 1)
+				break
+			}
 		}
 	}
 	fmt.Println(count)
