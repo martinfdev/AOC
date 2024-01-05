@@ -1,6 +1,9 @@
 package main
 
-import "os"
+import (
+	"io"
+	"os"
+)
 
 func Read_file(file_name string) string {
 	file, err := os.Open(file_name)
@@ -9,10 +12,17 @@ func Read_file(file_name string) string {
 	}
 	defer file.Close()
 
-	data := make([]byte, 100)
-	count, err := file.Read(data)
-	if err != nil {
-		panic(err)
+	data := ""
+	for {
+		var buf [512]byte
+		n, err := file.Read(buf[:])
+		data += string(buf[:n])
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
 	}
-	return string(data[:count])
+	return data
 }
