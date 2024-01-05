@@ -11,6 +11,7 @@ func Day2() {
 	data_split := strings.Split(data, "\n")
 
 	total_paper := 0
+	total_ribbon := 0
 	for i, v := range data_split {
 		l_w_h := strings.Split(v, "x")
 		//cast string to int
@@ -29,9 +30,11 @@ func Day2() {
 		if len(l_w_h) == 3 {
 			l, w, h := dimension[0], dimension[1], dimension[2]
 			total_paper += (2 * l * w) + (2 * w * h) + (2 * h * l) + min(l*w, w*h, h*l)
+			total_ribbon += (2 * min(l+w, w+h, h+l)) + (l * w * h)
 		} else {
 			fmt.Println("Error: ", i, v)
 		}
 	}
 	fmt.Println("Total paper: ", total_paper)
+	fmt.Println("Total ribbon: ", total_ribbon)
 }
