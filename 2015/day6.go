@@ -13,6 +13,11 @@ func Day6() {
 		grid_lights[i] = make([]bool, 1000)
 	}
 	linghts_on := 0
+	grid_lights_brightness := make([][]int, 1000)
+	for i := range grid_lights_brightness {
+		grid_lights_brightness[i] = make([]int, 1000)
+	}
+	total_brightness := 0
 	for _, v := range list_data {
 		grid_data := strings.Split(v, " ")
 		if grid_data[0] == "turn" {
@@ -24,6 +29,7 @@ func Day6() {
 				for i := x_start; i <= x_end; i++ {
 					for j := y_start; j <= y_end; j++ {
 						grid_lights[i][j] = true
+						grid_lights_brightness[i][j]++
 					}
 				}
 
@@ -35,6 +41,9 @@ func Day6() {
 				for i := x_start; i <= x_end; i++ {
 					for j := y_start; j <= y_end; j++ {
 						grid_lights[i][j] = false
+						if grid_lights_brightness[i][j] > 0 {
+							grid_lights_brightness[i][j]--
+						}
 					}
 				}
 			}
@@ -47,6 +56,7 @@ func Day6() {
 			for i := x_start; i <= x_end; i++ {
 				for j := y_start; j <= y_end; j++ {
 					grid_lights[i][j] = !grid_lights[i][j]
+					grid_lights_brightness[i][j] += 2
 				}
 			}
 		}
@@ -58,5 +68,12 @@ func Day6() {
 			}
 		}
 	}
-	fmt.Println("Day 6:", linghts_on)
+	for _, v := range grid_lights_brightness {
+		for _, v2 := range v {
+			total_brightness += v2
+		}
+	}
+
+	fmt.Println("On lights:", linghts_on)
+	fmt.Println("Total brightness:", total_brightness)
 }
