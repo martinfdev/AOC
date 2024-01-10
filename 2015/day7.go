@@ -7,80 +7,162 @@ import (
 	"strings"
 )
 
+type Wire struct {
+	name   string
+	signal uint16
+	status bool
+}
+
 type Circuit struct {
-	wires   map[string]uint16
+	wires   map[string]Wire
 	actions []string
 }
 
 func NewCircuit() *Circuit {
 	return &Circuit{
-		wires: make(map[string]uint16),
+		wires: make(map[string]Wire),
 	}
 }
 
-func (c *Circuit) execute(instruction string) {
+func (c *Circuit) execute(instruction string) bool {
 	parts := strings.Split(instruction, " -> ")
 	command, output := parts[0], parts[1]
 
 	switch {
 	case strings.Contains(command, "AND"):
-		c.andGate(command, output)
+		return c.andGate(command, output)
 	case strings.Contains(command, "OR"):
-		c.orGate(command, output)
+		return c.orGate(command, output)
 	case strings.Contains(command, "LSHIFT"):
-		c.leftShift(command, output)
+		return c.leftShift(command, output)
 	case strings.Contains(command, "RSHIFT"):
-		c.rightShift(command, output)
+		return c.rightShift(command, output)
 	case strings.Contains(command, "NOT"):
-		c.notGate(command, output)
+		return c.notGate(command, output)
 	default:
-		c.directWire(command, output)
+		return c.directWire(command, output)
 	}
 }
 
-func (c *Circuit) andGate(command, output string) {
+func (c *Circuit) andGate(command, output string) bool {
 	parts := strings.Split(command, " AND ")
 	x, y := parts[0], parts[1]
-	c.wires[output] = c.getSignal(x) & c.getSignal(y)
+	wire1 := c.getSignal(x)
+	wire2 := c.getSignal(y)
+	if wire1.status != false && wire2.status != false {
+		result := wire1.signal & wire2.signal
+		c.wires[output] = Wire{name: output, signal: result, status: true}
+		return true
+	}
+	val_x, err := strconv.Atoi(x)
+	if err == nil {
+		wire2 := c.getSignal(y)
+		if wire2.status != false {
+			result := uint16(val_x) & wire2.signal
+			c.wires[output] = Wire{name: output, signal: result, status: true}
+			return true
+		}
+	}
+	val_y, err := strconv.Atoi(y)
+	if err == nil {
+		wire1 := c.getSignal(x)
+		if wire1.status != false {
+			result := wire1.signal & uint16(val_y)
+			c.wires[output] = Wire{name: output, signal: result, status: true}
+			return true
+		}
+	}
+	return false
 }
 
-func (c *Circuit) orGate(command, output string) {
+func (c *Circuit) orGate(command, output string) bool {
 	parts := strings.Split(command, " OR ")
 	x, y := parts[0], parts[1]
-	c.wires[output] = c.getSignal(x) | c.getSignal(y)
+	wire1 := c.getSignal(x)
+	wire2 := c.getSignal(y)
+	if wire1.status != false && wire2.status != false {
+		result := wire1.signal | wire2.signal
+		c.wires[output] = Wire{name: output, signal: result, status: true}
+		return true
+	}
+	val_x, err := strconv.Atoi(x)
+	if err == nil {
+		wire2 := c.getSignal(y)
+		if wire2.status != false {
+			result := uint16(val_x) | wire2.signal
+			c.wires[output] = Wire{name: output, signal: result, status: true}
+			return true
+		}
+	}
+	val_y, err := strconv.Atoi(y)
+	if err == nil {
+		wire1 := c.getSignal(x)
+		if wire1.status != false {
+			result := wire1.signal | uint16(val_y)
+			c.wires[output] = Wire{name: output, signal: result, status: true}
+			return true
+		}
+	}
+	return false
 }
 
-func (c *Circuit) leftShift(command, output string) {
+func (c *Circuit) leftShift(command, output string) bool {
 	parts := strings.Split(command, " LSHIFT ")
 	x, shift := parts[0], parts[1]
-	xSignal := c.getSignal(x)
-	shiftValue, _ := strconv.Atoi(shift)
-	c.wires[output] = xSignal << uint(shiftValue)
+	wire := c.getSignal(x)
+	if wire.status != false {
+		shiftValue, _ := strconv.Atoi(shift)
+		result := wire.signal << uint(shiftValue)
+		c.wires[output] = Wire{name: output, signal: result, status: true}
+		return true
+	}
+	return false
 }
 
-func (c *Circuit) rightShift(command, output string) {
+func (c *Circuit) rightShift(command, output string) bool {
 	parts := strings.Split(command, " RSHIFT ")
 	x, shift := parts[0], parts[1]
-	xSignal := c.getSignal(x)
-	shiftValue, _ := strconv.Atoi(shift)
-	c.wires[output] = xSignal >> uint(shiftValue)
-}
-
-func (c *Circuit) notGate(command, output string) {
-	x := strings.Split(command, "NOT ")[1]
-	c.wires[output] = ^c.getSignal(x)
-}
-
-func (c *Circuit) directWire(command, output string) {
-	x, _ := strconv.Atoi(command)
-	c.wires[output] = uint16(x)
-}
-
-func (c *Circuit) getSignal(wire string) uint16 {
-	if signal, ok := c.wires[wire]; ok {
-		return signal
+	wire := c.getSignal(x)
+	if wire.status != false {
+		shiftValue, _ := strconv.Atoi(shift)
+		result := wire.signal >> uint(shiftValue)
+		c.wires[output] = Wire{name: output, signal: result, status: true}
+		return true
 	}
-	return 0
+	return false
+}
+
+func (c *Circuit) notGate(command, output string) bool {
+	x := strings.Split(command, "NOT ")[1]
+	wire := c.getSignal(x)
+	if wire.status != false {
+		result := ^wire.signal
+		c.wires[output] = Wire{name: output, signal: result, status: true}
+		return true
+	}
+	return false
+}
+
+func (c *Circuit) directWire(command, output string) bool {
+	x, err := strconv.Atoi(command)
+	if err == nil {
+		c.wires[output] = Wire{name: output, signal: uint16(x), status: true}
+		return true
+	} else {
+		wire := c.getSignal(command)
+		if wire.status != false {
+			c.wires[output] = Wire{name: output, signal: wire.signal, status: true}
+			return true
+		}
+		return false
+	}
+}
+
+func (c *Circuit) getSignal(wire string) Wire {
+	if wire, ok := c.wires[wire]; ok {
+		return wire
+	}
+	return Wire{}
 }
 
 func proccesInstructions(data string) *Circuit {
@@ -90,20 +172,24 @@ func proccesInstructions(data string) *Circuit {
 		line := scanner.Text()
 		circuit.actions = append(circuit.actions, line)
 	}
-	for _, action := range circuit.actions {
-		circuit.execute(action)
+FOR:
+	for i, action := range circuit.actions {
+		result := circuit.execute(action)
+		if result {
+			//remove action from slice
+			circuit.actions = append(circuit.actions[:i], circuit.actions[i+1:]...)
+			goto FOR
+		}
 	}
-	//update values for part 2
-	for _, action := range circuit.actions {
-		circuit.execute(action)
+	if len(circuit.actions) > 0 {
+		goto FOR
 	}
-
 	return circuit
 }
 
 func Day7() {
 	data := Read_file("files/day7.txt")
 	circuit := proccesInstructions(data)
-	final_signal := circuit.getSignal("a")
+	final_signal := circuit.getSignal("a").signal
 	fmt.Println(final_signal)
 }
