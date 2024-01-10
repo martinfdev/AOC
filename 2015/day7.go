@@ -165,7 +165,7 @@ func (c *Circuit) getSignal(wire string) Wire {
 	return Wire{}
 }
 
-func proccesInstructions(data string) *Circuit {
+func proccesInstructions(data string, value_a uint16) *Circuit {
 	circuit := NewCircuit()
 	scanner := bufio.NewScanner(strings.NewReader(data))
 	for scanner.Scan() {
@@ -175,21 +175,25 @@ func proccesInstructions(data string) *Circuit {
 FOR:
 	for i, action := range circuit.actions {
 		result := circuit.execute(action)
+		if value_a != 0 {
+			circuit.wires["b"] = Wire{name: "b", signal: value_a, status: true}
+		}
 		if result {
 			//remove action from slice
 			circuit.actions = append(circuit.actions[:i], circuit.actions[i+1:]...)
 			goto FOR
 		}
 	}
-	if len(circuit.actions) > 0 {
-		goto FOR
-	}
+
 	return circuit
 }
 
 func Day7() {
 	data := Read_file("files/day7.txt")
-	circuit := proccesInstructions(data)
+	circuit := proccesInstructions(data, 0)
 	final_signal := circuit.getSignal("a").signal
+	fmt.Println(final_signal)
+	circuit = proccesInstructions(data, final_signal)
+	final_signal = circuit.getSignal("a").signal
 	fmt.Println(final_signal)
 }
