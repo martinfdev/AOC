@@ -7,74 +7,103 @@ import (
 	"strings"
 )
 
-type Gate interface {
-	Signal() uint16
-}
-
 type Circuit struct {
-	signals map[string]uint16
-	gates   map[string]Gate
+	wires   map[string]uint16
+	actions []string
 }
 
-type Wire struct {
-	signal uint16
-}
-
-type Not struct {
-	signal uint16
-}
-
-func (w *Wire) Signal() uint16 {
-	return w.signal
-}
-
-func (n *Not) Signal() uint16 {
-	return ^n.signal
-}
-
-func proccesInstructions(instructions string) Circuit {
-	circuit := Circuit{make(map[string]uint16), make(map[string]Gate)}
-	scanner := bufio.NewScanner(strings.NewReader(instructions))
-	for scanner.Scan() {
-		instruction := scanner.Text()
-		proccesInstruction(&circuit, instruction)
-	}
-	return circuit
-}
-
-func proccesInstruction(circuit *Circuit, instruction string) {
-	parts := strings.Fields(instruction)
-	switch len(parts) {
-	case 3:
-		// assignment
-		signal, err := strconv.ParseUint(parts[0], 10, 16)
-		if err != nil {
-			circuit.gates[parts[2]] = &Wire{circuit.signals[parts[0]]}
-		} else {
-			circuit.signals[parts[2]] = uint16(signal)
-		}
-	case 4:
-		// NOT
-		circuit.gates[parts[3]] = &Not{circuit.signals[parts[1]]}
-		circuit.signals[parts[3]] = valueOfWire(circuit, parts[3])
-	case 5:
-		// AND, OR, LSHIFT, RSHIFT
-
+func NewCircuit() *Circuit {
+	return &Circuit{
+		wires: make(map[string]uint16),
 	}
 }
 
-func valueOfWire(circuit *Circuit, wire string) uint16 {
-	if signal, ok := circuit.signals[wire]; ok {
+func (c *Circuit) execute(instruction string) {
+	parts := strings.Split(instruction, " -> ")
+	command, output := parts[0], parts[1]
+
+	switch {
+	case strings.Contains(command, "AND"):
+		c.andGate(command, output)
+	case strings.Contains(command, "OR"):
+		c.orGate(command, output)
+	case strings.Contains(command, "LSHIFT"):
+		c.leftShift(command, output)
+	case strings.Contains(command, "RSHIFT"):
+		c.rightShift(command, output)
+	case strings.Contains(command, "NOT"):
+		c.notGate(command, output)
+	default:
+		c.directWire(command, output)
+	}
+}
+
+func (c *Circuit) andGate(command, output string) {
+	parts := strings.Split(command, " AND ")
+	x, y := parts[0], parts[1]
+	c.wires[output] = c.getSignal(x) & c.getSignal(y)
+}
+
+func (c *Circuit) orGate(command, output string) {
+	parts := strings.Split(command, " OR ")
+	x, y := parts[0], parts[1]
+	c.wires[output] = c.getSignal(x) | c.getSignal(y)
+}
+
+func (c *Circuit) leftShift(command, output string) {
+	parts := strings.Split(command, " LSHIFT ")
+	x, shift := parts[0], parts[1]
+	xSignal := c.getSignal(x)
+	shiftValue, _ := strconv.Atoi(shift)
+	c.wires[output] = xSignal << uint(shiftValue)
+}
+
+func (c *Circuit) rightShift(command, output string) {
+	parts := strings.Split(command, " RSHIFT ")
+	x, shift := parts[0], parts[1]
+	xSignal := c.getSignal(x)
+	shiftValue, _ := strconv.Atoi(shift)
+	c.wires[output] = xSignal >> uint(shiftValue)
+}
+
+func (c *Circuit) notGate(command, output string) {
+	x := strings.Split(command, "NOT ")[1]
+	c.wires[output] = ^c.getSignal(x)
+}
+
+func (c *Circuit) directWire(command, output string) {
+	x, _ := strconv.Atoi(command)
+	c.wires[output] = uint16(x)
+}
+
+func (c *Circuit) getSignal(wire string) uint16 {
+	if signal, ok := c.wires[wire]; ok {
 		return signal
-	} else {
-		return circuit.gates[wire].Signal()
 	}
+	return 0
+}
+
+func proccesInstructions(data string) *Circuit {
+	circuit := NewCircuit()
+	scanner := bufio.NewScanner(strings.NewReader(data))
+	for scanner.Scan() {
+		line := scanner.Text()
+		circuit.actions = append(circuit.actions, line)
+	}
+	for _, action := range circuit.actions {
+		circuit.execute(action)
+	}
+	//update values for part 2
+	for _, action := range circuit.actions {
+		circuit.execute(action)
+	}
+
+	return circuit
 }
 
 func Day7() {
 	data := Read_file("files/day7.txt")
 	circuit := proccesInstructions(data)
-	final_signal := circuit.signals["i"]
+	final_signal := circuit.getSignal("a")
 	fmt.Println(final_signal)
-
 }
