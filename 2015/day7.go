@@ -56,10 +56,18 @@ func proccesInstruction(circuit *Circuit, instruction string) {
 	case 4:
 		// NOT
 		circuit.gates[parts[3]] = &Not{circuit.signals[parts[1]]}
-		circuit.signals[parts[3]] = circuit.gates[parts[3]].Signal()
+		circuit.signals[parts[3]] = valueOfWire(circuit, parts[3])
 	case 5:
 		// AND, OR, LSHIFT, RSHIFT
 
+	}
+}
+
+func valueOfWire(circuit *Circuit, wire string) uint16 {
+	if signal, ok := circuit.signals[wire]; ok {
+		return signal
+	} else {
+		return circuit.gates[wire].Signal()
 	}
 }
 
