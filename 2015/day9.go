@@ -46,6 +46,11 @@ func Day9() {
 
 	//found the route with the shortest distance
 	rute, distance := findShortestRoute(cities, distances)
+	//print the result part 1
+	fmt.Println("Day 9: ", distance, rute)
+	//found the route with the longest distance
+	rute, distance = findLongestRoute(cities, distances)
+	//print the result part 2
 	fmt.Println("Day 9: ", distance, rute)
 }
 
@@ -93,4 +98,26 @@ func permutations(cities []string) [][]string {
 	}
 	permute([]string{})
 	return perm
+}
+
+func findLongestRoute(cities []string, distances map[string]map[string]int) ([]string, int) {
+	//initialize variables
+	longestDistance := 0
+	longestRoute := make([]string, 0)
+
+	//get all possible routes
+	routes := permutations(cities)
+
+	//iterate over all routes
+	for _, route := range routes {
+		distance := 0
+		for i := 0; i < len(route)-1; i++ {
+			distance += distances[route[i]][route[i+1]]
+		}
+		if distance > longestDistance {
+			longestDistance = distance
+			longestRoute = route
+		}
+	}
+	return longestRoute, longestDistance
 }
