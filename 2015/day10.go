@@ -15,6 +15,9 @@ func Day10() {
 	}
 	// Part 1
 	fmt.Println("Part 1: ", len(part1(input, 40)))
+
+	// Part 2
+	fmt.Println("Part 2: ", len(part1(input, 50)))
 }
 
 // func for const of conway's
