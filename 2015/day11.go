@@ -8,6 +8,8 @@ import (
 func Day11() {
 	data := Read_file("files/day11.txt")
 	fmt.Println("Part1", nextPassword(data))
+	data = nextPassword(data)
+	fmt.Println("Part2", nextPassword(data))
 }
 
 func isValid(password string) bool {
