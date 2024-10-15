@@ -31,6 +31,15 @@ func Day13() {
 		fmt.Printf("%s ", prob.Names[i])
 	}
 
+	// Part 2: Add yourself as neutral guest
+	prob2 := AddNeutralGuest(prob, "You")
+	best2, order2 := MaxCycleDP(prob2)
+	fmt.Printf("\nDay 13 Part 2: Maximum happiness with yourself is %d\n", best2)
+	fmt.Printf("Order: ")
+	for _, i := range order2 {
+		fmt.Printf("%s ", prob2.Names[i])
+	}
+	fmt.Println()
 }
 
 // parseInput reads the problem input from r and returns a Problem instance.
@@ -186,4 +195,37 @@ func MaxCycleDP(prob *Problem) (int, []int) {
 		}
 	}
 	return best, order
+}
+
+// Add Neutral guest with 0 happiness impact
+func AddNeutralGuest(prob *Problem, you_name string) *Problem {
+	if _, ok := prob.ID[you_name]; ok {
+		return prob
+	}
+	n := len(prob.Names)
+
+	//new maping and names
+	id := make(map[string]int, n+1)
+	names := make([]string, 0, n+1)
+	for i, name := range prob.Names {
+		id[name] = i
+		names = append(names, name)
+	}
+	id[you_name] = n
+	names = append(names, you_name)
+
+	//new weight matrix
+	W2 := make([][]int, n+1)
+	Pair2 := make([][]int, n+1)
+	for i := range W2 {
+		W2[i] = make([]int, n+1)
+		Pair2[i] = make([]int, n+1)
+	}
+	//copy old weights
+	for i := 0; i < n; i++ {
+		copy(W2[i][:n], prob.W[i])
+		copy(Pair2[i][:n], prob.Pair[i])
+	}
+
+	return &Problem{ID: id, Names: names, W: W2, Pair: Pair2}
 }
