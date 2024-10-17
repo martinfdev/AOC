@@ -21,8 +21,15 @@ func Day14() {
 		fmt.Println("Error to parse reindeer data:", err)
 		return
 	}
-	winner, bestDistance := findWinningReindeerByDistance(parsedReindeers, 2503) // 2503 seconds of race
+
+	const raceDurationSec = 2503 // duration of the race in seconds
+	//part 1
+	winner, bestDistance := findWinningReindeerByDistance(parsedReindeers, raceDurationSec)
 	fmt.Printf("The winning reindeer is %s with a distance of %d km\n", winner, bestDistance)
+
+	//part 2
+	winners, maxPoints := scoreRaceByPoints(parsedReindeers, raceDurationSec)
+	fmt.Printf("The winning reindeer(s) by points: %v with %d points\n", winners, maxPoints)
 
 }
 
@@ -75,4 +82,39 @@ func findWinningReindeerByDistance(reindeers []Reindeer, totalTimeSec int) (winn
 		}
 	}
 	return
+}
+
+// simulate seconds per second to award points
+func scoreRaceByPoints(reindeers []Reindeer, totalTimeSec int) (winners []string, maxPoints int) {
+	n := len(reindeers)
+	points := make([]int, n)
+
+	for t := 1; t <= totalTimeSec; t++ {
+		maxDistance := -1
+		distances := make([]int, n)
+		for i, reindeer := range reindeers {
+			d := calculateDistance(reindeer, t)
+			distances[i] = d
+			if d > maxDistance {
+				maxDistance = d
+			}
+		}
+		// Award points to reindeers at max distance
+		for i := range reindeers {
+			if distances[i] == maxDistance {
+				points[i]++
+			}
+		}
+	}
+
+	// Find max points and winners
+	for i, p := range points {
+		if p > maxPoints {
+			maxPoints = p
+			winners = []string{reindeers[i].Name}
+		} else if p == maxPoints {
+			winners = append(winners, reindeers[i].Name)
+		}
+	}
+	return winners, maxPoints
 }
