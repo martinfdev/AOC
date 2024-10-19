@@ -29,6 +29,8 @@ func Day15() {
 	result := MaxScore(ingredients, 100)
 	fmt.Printf("Día 15 - Parte 1: La mejor puntuación es %d con la mezcla %v\n", result.BestScore, result.BestMix)
 
+	resultWithCalories := MaxScoreWithCalories(ingredients, 100, 500)
+	fmt.Printf("Día 15 - Parte 2: La mejor puntuación con 500 calorías es %d con la mezcla %v\n", resultWithCalories.BestScore, resultWithCalories.BestMix)
 }
 
 func parseIngredient(content string) ([]Ingredient, error) {
@@ -50,6 +52,10 @@ func parseIngredient(content string) ([]Ingredient, error) {
 
 func MaxScore(ingredients []Ingredient, TotalTeaspoons int) MixResult {
 	return maximize(ingredients, TotalTeaspoons, -1)
+}
+
+func MaxScoreWithCalories(ingredients []Ingredient, totalTeaspoons int, caloriesTarget int) MixResult {
+	return maximize(ingredients, totalTeaspoons, caloriesTarget)
 }
 
 func maximize(ingredients []Ingredient, totalTeaspoons int, caloriesTarget int) MixResult {
