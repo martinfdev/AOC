@@ -19,6 +19,10 @@ func Day16() {
 	// Part 1
 	sueIDPart1 := findSuePart1(aunts, target)
 	fmt.Printf("Day 16 - Part 1: Aunt Sue ID is %d\n", sueIDPart1)
+
+	// Part 2
+	sueIDPart2 := findSuePart2(aunts, target)
+	fmt.Printf("Day 16 - Part 2: Aunt Sue ID is %d\n", sueIDPart2)
 }
 
 func parseAuntSue(content string) []AuntSue {
@@ -67,6 +71,35 @@ func findSuePart1(aunts []AuntSue, target map[string]int) int {
 		for key, value := range aunt.Props {
 			if target[key] != value {
 				match = false
+				break
+			}
+		}
+		if match {
+			return aunt.ID
+		}
+	}
+	return -1
+}
+
+func findSuePart2(aunts []AuntSue, target map[string]int) int {
+	for _, aunt := range aunts {
+		match := true
+		for key, value := range aunt.Props {
+			switch key {
+			case "cats", "trees":
+				if !(value > target[key]) {
+					match = false
+				}
+			case "pomeranians", "goldfish":
+				if !(value < target[key]) {
+					match = false
+				}
+			default:
+				if target[key] != value {
+					match = false
+				}
+			}
+			if !match {
 				break
 			}
 		}
