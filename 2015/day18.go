@@ -193,7 +193,7 @@ func (b *Board) CountOn() int {
 	sum := 0
 	for r := 0; r < b.H; r++ {
 		sum += bits.OnesCount64(b.Rows[r].Lo)
-		// limitar Hi a 36 bits ya lo hicimos en shifts, pero OnesCount64 ignora bits altos si están a 0
+		// limitar Hi a 36 bits shifts, pero OnesCount64 ignora bits altos si están a 0
 		sum += bits.OnesCount64(b.Rows[r].Hi)
 	}
 	return sum
