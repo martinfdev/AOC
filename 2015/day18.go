@@ -29,6 +29,19 @@ func Day18() {
 	onCount := board.CountOn()
 	fmt.Printf("Day18: after %d steps, lights on: %d\n", steps, onCount)
 	fmt.Printf("Board:\n%s\n", board.String())
+
+	//part2
+	board2, err := newBoardFromString(content)
+	if err != nil {
+		panic(err)
+	}
+	board2.ForceCornersOn()
+	for i := 0; i < steps; i++ {
+		board2.StepCornersOn()
+	}
+	onCount2 := board2.CountOn()
+	fmt.Printf("Day18 part2: after %d steps, lights on: %d\n", steps, onCount2)
+	fmt.Printf("Board:\n%s\n", board2.String())
 }
 
 func NewBoard() *Board { b := &Board{W: 100, H: 100}; b.Rows = make([]Row, b.H); return b }
@@ -212,4 +225,94 @@ func (b *Board) String() string {
 		sb.WriteByte('\n')
 	}
 	return sb.String()
+}
+
+func (b *Board) ForceCornersOn() {
+	b.Rows[0].Lo |= 1 << 0
+	b.Rows[0].Hi |= 1 << 35
+
+	last := b.H - 1
+	b.Rows[last].Lo |= 1 << 0
+	b.Rows[last].Hi |= 1 << 35
+}
+
+func (b *Board) StepCornersOn() {
+	var next [100]Row
+	var counts [100]uint8
+
+	for r := 0; r < b.H; r++ {
+		// vecinos verticales: arriba (ru), mismo (r), abajo (rd)
+		ru := Row{}
+		if r > 0 {
+			ru = b.Rows[r-1]
+		}
+		rc := b.Rows[r]
+		rd := Row{}
+		if r+1 < b.H {
+			rd = b.Rows[r+1]
+		}
+
+		// 8 máscaras de vecinos (excluye el centro rc)
+		masks := [8]Row{
+			shiftLeft(ru), ru, shiftRight(ru),
+			shiftLeft(rc) /* center rc excluido */, shiftRight(rc),
+			shiftLeft(rd), rd, shiftRight(rd),
+		}
+
+		// reset de contadores columna a columna
+		for i := range counts {
+			counts[i] = 0
+		}
+
+		// acumular vecinos en counts a partir de las 8 máscaras
+		accumulateCounts := func(row Row) {
+			// Lo: 64 bits
+			for c := 0; c < 64; c++ {
+				if (row.Lo>>c)&1 == 1 {
+					counts[c]++
+				}
+			}
+			// Hi: 36 bits → columnas 64..99
+			for c := 0; c < 36; c++ {
+				if (row.Hi>>c)&1 == 1 {
+					counts[64+c]++
+				}
+			}
+		}
+		for _, m := range masks {
+			accumulateCounts(m)
+		}
+
+		// aplicar regla B3/S23 y construir next[r]
+		var nlo, nhi uint64
+		for c := 0; c < 64; c++ {
+			cnt := counts[c]
+			on := (rc.Lo>>c)&1 == 1
+			keep := on && (cnt == 2 || cnt == 3)
+			born := !on && (cnt == 3)
+			if keep || born {
+				nlo |= 1 << c
+			}
+		}
+		for c := 0; c < 36; c++ {
+			cnt := counts[64+c]
+			on := (rc.Hi>>c)&1 == 1
+			keep := on && (cnt == 2 || cnt == 3)
+			born := !on && (cnt == 3)
+			if keep || born {
+				nhi |= 1 << c
+			}
+		}
+		next[r] = Row{Lo: nlo, Hi: nhi}
+	}
+
+	//part2  force corners on
+	next[0].Lo |= 1 << 0
+	next[0].Hi |= 1 << 35
+
+	last := b.H - 1
+	next[last].Lo |= 1 << 0
+	next[last].Hi |= 1 << 35
+
+	b.Rows = next[:]
 }
