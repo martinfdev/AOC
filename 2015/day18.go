@@ -28,7 +28,7 @@ func Day18() {
 	}
 	onCount := board.CountOn()
 	fmt.Printf("Day18: after %d steps, lights on: %d\n", steps, onCount)
-	fmt.Printf("Board:\n%s\n", board.String())
+	// fmt.Printf("Board:\n%s\n", board.String())
 
 	//part2
 	board2, err := newBoardFromString(content)
@@ -41,7 +41,7 @@ func Day18() {
 	}
 	onCount2 := board2.CountOn()
 	fmt.Printf("Day18 part2: after %d steps, lights on: %d\n", steps, onCount2)
-	fmt.Printf("Board:\n%s\n", board2.String())
+	// fmt.Printf("Board:\n%s\n", board2.String())
 }
 
 func NewBoard() *Board { b := &Board{W: 100, H: 100}; b.Rows = make([]Row, b.H); return b }
