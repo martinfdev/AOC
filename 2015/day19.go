@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 )
 
 func Day19() {
@@ -14,6 +16,17 @@ func Day19() {
 	}
 	count, _ := DistinctAfterOneReplacement(grammar, medicineTokens)
 	fmt.Printf("Day19 Part 1: starting from %s, distinct molecules after one replacement = %d\n", medicineStr, count)
+
+	rev := buildRevRules(grammar)
+
+	maxRestarts := 500
+	steps, ok := greedyReduceToE(medicineTokens, rev, maxRestarts)
+	if !ok {
+		fmt.Println("Day19 Part 2 (greedy): no se logró reducir a 'e' con los restarts configurados.")
+		return
+	}
+
+	fmt.Printf("Day19 Part 2 (greedy): desde 'e' hasta %s se requieren %d pasos (reducción inversa)\n", medicineStr, steps)
 }
 
 type Grammar struct {
@@ -26,6 +39,11 @@ type Rule struct {
 	LHSKey string
 	LHSTok []string
 	RHSTok []string
+}
+
+type RevRule struct {
+	RHS []string
+	LHS []string
 }
 
 func tokenizeMolecule(s string) []string {
@@ -191,4 +209,96 @@ func DistinctAfterOneReplacement(g *Grammar, medTok []string) (int, map[string]s
 		}
 	}
 	return len(out), out
+}
+
+//part 2
+
+// construct the reverse rules from the grammar
+func buildRevRules(g *Grammar) []RevRule {
+	rev := make([]RevRule, 0, 1024)
+	for lhsRaw, rhsList := range g.ByLHS {
+		lhsTok := tokenizeMolecule(lhsRaw)
+		for _, rhsTok := range rhsList {
+			rev = append(rev, RevRule{
+				RHS: rhsTok,
+				LHS: lhsTok,
+			})
+		}
+	}
+	return rev
+}
+
+func tokensEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func replaceOnce(s, rhs, lhs []string) ([]string, bool) {
+	n := len(s)
+	r := len(rhs)
+	if r == 0 || r > n {
+		return nil, false
+	}
+	for i := 0; i+r <= n; i++ {
+		if tokensEqual(s[i:i+r], rhs) {
+			out := make([]string, 0, n-r+len(lhs))
+			out = append(out, s[:i]...)
+			out = append(out, lhs...)
+			out = append(out, s[i+r:]...)
+			return out, true
+		}
+	}
+	return nil, false
+}
+
+func greedyReduceToE(target []string, rev []RevRule, maxRestarts int) (int, bool) {
+	best := int(^uint(0) >> 1) // MaxInt
+	found := false
+	eTok := []string{"e"}
+
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for attempt := 0; attempt <= maxRestarts; attempt++ {
+		cur := make([]string, len(target))
+		copy(cur, target)
+		steps := 0
+
+		// reordenamos reglas aleatoriamente en cada intento
+		rng.Shuffle(len(rev), func(i, j int) { rev[i], rev[j] = rev[j], rev[i] })
+
+		for {
+			if tokensEqual(cur, eTok) {
+				if steps < best {
+					best = steps
+				}
+				found = true
+				break
+			}
+
+			applied := false
+			for _, rr := range rev {
+				next, ok := replaceOnce(cur, rr.RHS, rr.LHS)
+				if ok {
+					cur = next
+					steps++
+					applied = true
+					break
+				}
+			}
+
+			if !applied {
+				// nos atascamos en este intento; probamos otro orden de reglas
+				break
+			}
+		}
+	}
+
+	return best, found
 }
