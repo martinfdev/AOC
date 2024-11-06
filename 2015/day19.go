@@ -270,7 +270,6 @@ func greedyReduceToE(target []string, rev []RevRule, maxRestarts int) (int, bool
 		copy(cur, target)
 		steps := 0
 
-		// reordenamos reglas aleatoriamente en cada intento
 		rng.Shuffle(len(rev), func(i, j int) { rev[i], rev[j] = rev[j], rev[i] })
 
 		for {
@@ -294,7 +293,6 @@ func greedyReduceToE(target []string, rev []RevRule, maxRestarts int) (int, bool
 			}
 
 			if !applied {
-				// nos atascamos en este intento; probamos otro orden de reglas
 				break
 			}
 		}
