@@ -11,6 +11,9 @@ func Day2() {
 	ranges := parse_line(content)
 	result := sumInvalidIDs(ranges)
 	fmt.Printf("Day 2: Sum of invalid IDs: %d\n", result)
+
+	result2 := sumInvalidIDsPart2(ranges)
+	fmt.Printf("Day 2: Part 2 - Sum of invalid IDs: %d\n", result2)
 }
 
 type Range struct {
@@ -76,4 +79,54 @@ func isInvalidID(n int) bool {
 	right := n % pow10
 
 	return left == right
+}
+
+func isInvalidIDPart2(n int) bool {
+	if n <= 0 {
+		return false
+	}
+
+	s := strconv.Itoa(n)
+	L := len(s)
+
+	// try all possible pattern lengths
+	for p := 1; p <= L/2; p++ {
+		// the total length must be a multiple of the block size
+		if L%p != 0 {
+			continue
+		}
+
+		reps := L / p
+		if reps < 2 {
+			continue
+		}
+
+		pattern := s[0:p]
+		ok := true
+
+		for i := 1; i < reps; i++ {
+			if s[i*p:(i+1)*p] != pattern {
+				ok = false
+				break
+			}
+		}
+
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
+func sumInvalidIDsPart2(ranges []Range) int64 {
+	var sum int64 = 0
+
+	for _, r := range ranges {
+		for id := r.Min; id <= r.Max; id++ {
+			if isInvalidIDPart2(id) {
+				sum += int64(id)
+			}
+		}
+	}
+	return sum
 }
