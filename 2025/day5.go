@@ -15,6 +15,8 @@ func Day5() {
 	data := read_file("./files/day5.txt")
 	result := solveIngredients(data)
 	fmt.Println("Day 5 part1:", result)
+	totalFresh := solveTotalFresh(data)
+	fmt.Println("Day 5 part2:", totalFresh)
 }
 
 func solveIngredients(input string) int {
@@ -82,4 +84,52 @@ func isFresh(id int, intervals []Interval) bool {
 	}
 
 	return false
+}
+
+func solveTotalFresh(input string) int {
+	lines := strings.Split(strings.TrimSpace(input), "\n")
+	var intervals []Interval
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "-")
+		if len(parts) != 2 {
+			continue
+		}
+		s, _ := strconv.Atoi(parts[0])
+		e, _ := strconv.Atoi(parts[1])
+		intervals = append(intervals, Interval{Start: s, End: e})
+	}
+
+	sort.Slice(intervals, func(i, j int) bool {
+		return intervals[i].Start < intervals[j].Start
+	})
+
+	var merged []Interval
+	if len(intervals) > 0 {
+		current := intervals[0]
+		for i := 1; i < len(intervals); i++ {
+			next := intervals[i]
+
+			if next.Start <= current.End {
+				if next.End > current.End {
+					current.End = next.End
+				}
+			} else {
+				merged = append(merged, current)
+				current = next
+			}
+		}
+		merged = append(merged, current)
+	}
+
+	totalCount := 0
+	for _, iv := range merged {
+		count := (iv.End - iv.Start) + 1
+		totalCount += count
+	}
+
+	return totalCount
 }
