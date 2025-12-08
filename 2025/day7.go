@@ -9,6 +9,7 @@ func Day7() {
 	input := read_file("./files/day7.txt")
 	parsedInput := parseInput(input)
 	fmt.Println("Day 7:", solveTachyon(parsedInput))
+	fmt.Println("Day 7.2:", solveQuantumTachyon(parsedInput))
 }
 
 func parseInput(input string) [][]rune {
@@ -70,4 +71,56 @@ func solveTachyon(grid [][]rune) int {
 		activeBeams = nextBeams
 	}
 	return totalSplits
+}
+
+func solveQuantumTachyon(grid [][]rune) int {
+	if len(grid) == 0 {
+		return 0
+	}
+
+	rows := len(grid)
+	cols := len(grid[0])
+
+	activeTimeLines := make(map[int]uint64)
+
+	//find start
+	for x := 0; x < cols; x++ {
+		if grid[0][x] == 'S' {
+			activeTimeLines[x] = 1
+			break
+		}
+	}
+
+	//simulate row by row
+	for y := 0; y < rows; y++ {
+		nextTimeLines := make(map[int]uint64)
+
+		if len(activeTimeLines) == 0 {
+			break
+		}
+
+		for x, count := range activeTimeLines {
+			currentChar := grid[y][x]
+
+			if currentChar == '^' {
+				if x-1 >= 0 {
+					nextTimeLines[x-1] += count
+				}
+				if x+1 < cols {
+					nextTimeLines[x+1] += count
+				}
+			} else {
+				nextTimeLines[x] += count
+			}
+		}
+
+		activeTimeLines = nextTimeLines
+	}
+
+	var total uint64 = 0
+
+	for _, count := range activeTimeLines {
+		total += count
+	}
+	return int(total)
 }
