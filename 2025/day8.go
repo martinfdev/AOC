@@ -23,6 +23,8 @@ func Day8() {
 	points := parseInputDSU(input)
 	result := solveDSU(points, 1000)
 	fmt.Println("Day 8 - part1:", result)
+	result2 := solveKruskal(points)
+	fmt.Println("Day 8 - part2:", result2)
 }
 
 func parseInputDSU(input string) []Point {
@@ -116,4 +118,44 @@ func solveDSU(points []Point, limitConnections int) int {
 	}
 
 	return calculateProductOfTop3(dsu, len(points))
+}
+
+func solveKruskal(points []Point) int {
+	var edges []Edge
+	for i := 0; i < len(points); i++ {
+		for j := i + 1; j < len(points); j++ {
+			p1 := points[i]
+			p2 := points[j]
+
+			dx := p1.X - p2.X
+			dy := p1.Y - p2.Y
+			dz := p1.Z - p2.Z
+			distSq := dx*dx + dy*dy + dz*dz
+
+			edges = append(edges, Edge{U: p1.ID, V: p2.ID, DistSq: distSq})
+		}
+	}
+
+	sort.Slice(edges, func(i, j int) bool {
+		return edges[i].DistSq < edges[j].DistSq
+	})
+
+	dsu := NewDSU(len(points))
+	activeComponents := len(points)
+
+	for _, edge := range edges {
+		rootU := dsu.Find(edge.U)
+		rootV := dsu.Find(edge.V)
+
+		if rootU != rootV {
+			dsu.Union(rootU, rootV)
+			activeComponents--
+			if activeComponents == 1 {
+				p1 := points[edge.U]
+				p2 := points[edge.V]
+				return p1.X * p2.X
+			}
+		}
+	}
+	return 0
 }
